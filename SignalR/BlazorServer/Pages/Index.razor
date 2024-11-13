@@ -36,10 +36,9 @@
             .WithAutomaticReconnect()
             .Build();
 
-        _hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        _hubConnection.On<string>("ReceiveMessage", message =>
         {
-            var formattedMessage = $"{user}: {message}";
-            _messages.Add(formattedMessage);
+            _messages.Add(message);
             InvokeAsync(StateHasChanged);
         });
 

@@ -49,12 +49,14 @@ public partial class MainWindow : Window
 
     private async void OpenConnection_Click(object sender, RoutedEventArgs e)
     {
-        _connection.On<string, string>("ReceiveMessage",
-            (user, message) => { Dispatcher.Invoke(() => { Messages.Items.Add($"{user}: {message}"); }); });
+        _connection.On<string>("ReceiveMessage",
+            message => { Dispatcher.Invoke(() => { Messages.Items.Add(message); }); });
 
         try
         {
             await _connection.StartAsync();
+
+            // There's a bit of a race condition here, but it's fine for this sample
             Messages.Items.Add("Connection started!");
             OpenConnection.IsEnabled = false;
             SendMessage.IsEnabled = true;
