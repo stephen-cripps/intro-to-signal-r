@@ -1,18 +1,38 @@
-﻿@page "/counter"
+﻿@page "/Counter"
+@inject NavigationManager navManager
+@using Microsoft.AspNetCore.SignalR.Client
+@implements IAsyncDisposable
 
-<PageTitle>Counter</PageTitle>
+<h3>Counter</h3>
 
-<h1>Counter</h1>
-
-<p role="status">Current count: @currentCount</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<p>Current count: @_currentCount</p>
 
 @code {
-    private int currentCount = 0;
+    private int _currentCount;
+    private HubConnection? _hubConnection;
 
-    private void IncrementCount()
+    protected override async Task OnInitializedAsync()
     {
-        currentCount++;
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(navManager.ToAbsoluteUri("/counterhub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        _hubConnection.On<string, int>("CounterIncrement", (user, value) =>
+        {
+            _currentCount += value;
+            InvokeAsync(StateHasChanged);
+        });
+
+        await _hubConnection.StartAsync();
     }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.DisposeAsync();
+        }
+    }
+
 }
